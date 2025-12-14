@@ -1,25 +1,217 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <title>CPU Scheduling</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CPU Scheduling Simülatörü</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 30px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+      }
+
+      .section {
+        margin-bottom: 30px;
+      }
+
+      h2 {
+        color: #444;
+        border-bottom: 2px solid #4CAF50;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+
+      .info-box {
+        background-color: #e3f2fd;
+        border: 1px solid #2196F3;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+      }
+
+      .info-box h3 {
+        margin-top: 0;
+        color: #1976D2;
+      }
+
+      .info-box ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+
+      .upload-form {
+        border: 2px dashed #ccc;
+        padding: 30px;
+        text-align: center;
+        background-color: #fafafa;
+        border-radius: 4px;
+      }
+
+      input[type="file"] {
+        margin: 10px 0;
+      }
+
+      .file-name {
+        color: #666;
+        margin: 10px 0;
+        font-size: 14px;
+      }
+
+      button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      .flash-messages {
+        margin-bottom: 20px;
+      }
+
+      .flash-message {
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+      }
+
+      .flash-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .flash-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .output-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .output-item {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+      }
+
+      .output-item a {
+        color: #2196F3;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .output-item a:hover {
+        text-decoration: underline;
+      }
+
+      .no-output {
+        text-align: center;
+        color: #999;
+        padding: 20px;
+      }
+    </style>
   </head>
   <body>
-    <h2>CSV Yükle</h2>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="csv" accept=".csv" required />
-      <button type="submit">Yükle ve Çalıştır</button>
-    </form>
+    <div class="container">
+      <h1>CPU Scheduling Simülatörü</h1>
+      <p class="subtitle">İşletim Sistemleri - CPU Zamanlama Algoritmaları</p>
 
-    <hr />
+      <!-- Flash Mesajları -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-messages">
+            {% for category, message in messages %}
+              <div class="flash-message flash-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
 
-    <h2>Çıktılar (outputs/)</h2>
-    <ul>
-      {% for f in files %}
-      <li><a href="/outputs/{{ f }}">{{ f }}</a></li>
-      {% else %}
-      <li>Henüz çıktı yok.</li>
-      {% endfor %}
-    </ul>
+      <!-- Bilgi Kutusu -->
+      <div class="info-box">
+        <h3>Desteklenen Algoritmalar</h3>
+        <ul>
+          <li><strong>FCFS</strong> (First Come First Served)</li>
+          <li><strong>Non-Preemptive SJF</strong> (Shortest Job First)</li>
+        </ul>
+        <p><strong>CSV Formatı:</strong> Process_ID, Arrival_Time, CPU_Burst_Time, Priority</p>
+      </div>
+
+      <!-- CSV Yükleme Bölümü -->
+      <div class="section">
+        <h2>CSV Dosyası Yükle</h2>
+        <div class="upload-form">
+          <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+            <input type="file" name="csv" accept=".csv" required id="fileInput" />
+            <div class="file-name" id="fileName">Henüz dosya seçilmedi</div>
+            <button type="submit">Yükle ve Çalıştır</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Çıktı Dosyaları Bölümü -->
+      <div class="section">
+        <h2>Oluşan Çıktılar</h2>
+        {% if dosyalar %}
+          <ul class="output-list">
+            {% for dosya in dosyalar %}
+              <li class="output-item">
+                <a href="/outputs/{{ dosya }}" download>{{ dosya }}</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="no-output">
+            <p>Henüz çıktı dosyası oluşturulmadı.</p>
+            <p>Yukarıdan bir CSV dosyası yükleyerek başlayın.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <script>
+      document.getElementById('fileInput').addEventListener('change', function(e) {
+        const fileName = e.target.files[0] ? e.target.files[0].name : 'Henüz dosya seçilmedi';
+        document.getElementById('fileName').textContent = fileName;
+      });
+    </script>
   </body>
 </html>
