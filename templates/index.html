@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>CPU Scheduling</title>
+  </head>
+  <body>
+    <h2>CSV Yükle</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="csv" accept=".csv" required />
+      <button type="submit">Yükle ve Çalıştır</button>
+    </form>
+
+    <hr />
+
+    <h2>Çıktılar (outputs/)</h2>
+    <ul>
+      {% for f in files %}
+      <li><a href="/outputs/{{ f }}">{{ f }}</a></li>
+      {% else %}
+      <li>Henüz çıktı yok.</li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>
